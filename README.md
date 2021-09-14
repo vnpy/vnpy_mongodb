@@ -12,4 +12,4 @@
 
 ## 说明
 
-基于mongoengine开发的MongoDB数据库接口。
+基于pymongo开发的MongoDB数据库接口。
