@@ -1,8 +1,10 @@
 """"""
 from datetime import datetime
-from typing import List
+from sys import intern
+from typing import List, Dict
 
 from pymongo import ASCENDING, MongoClient
+from pymongo import cursor
 from pymongo.database import Database
 from pymongo.cursor import Cursor
 from pymongo.collection import Collection
@@ -10,12 +12,7 @@ from pymongo.results import DeleteResult
 
 from vnpy.trader.constant import Exchange, Interval
 from vnpy.trader.object import BarData, TickData
-from vnpy.trader.database import (
-    BaseDatabase,
-    BarOverview,
-    DB_TZ,
-    convert_tz
-)
+from vnpy.trader.database import BaseDatabase, BarOverview
 from vnpy.trader.setting import SETTINGS
 
 
@@ -75,10 +72,21 @@ class MongodbDatabase(BaseDatabase):
 
         # 初始化K线概览表
         self.overview_collection: Collection = self.db["bar_overview"]
+        self.overview_collection.create_index(
+            [
+                ("exchange", ASCENDING),
+                ("symbol", ASCENDING),
+                ("interval", ASCENDING),
+            ],
+            unique=True
+        )
 
     def save_bar_data(self, bars: List[BarData]) -> bool:
         """保存K线数据"""
+        overviews: Dict[tuple, BarOverview] = {}
+
         for bar in bars:
+            # 逐个插入
             filter = {
                 "symbol": bar.symbol,
                 "exchange": bar.exchange.value,
@@ -101,6 +109,33 @@ class MongodbDatabase(BaseDatabase):
             }
 
             self.bar_collection.replace_one(filter, d, upsert=True)
+
+        # 更新汇总
+        filter = {
+            "symbol": bar.symbol,
+            "exchange": bar.exchange.value,
+            "interval": bar.interval.value 
+        }
+
+        overview = self.overview_collection.find_one(filter)
+
+        if not overview:
+            overview = {
+                "symbol": bar.symbol,
+                "exchange": bar.exchange.value,
+                "interval": bar.interval.value,
+                "count": len(bars),
+                "start": bars[0].datetime,
+                "end": bars[-1].datetime
+            }
+        else:
+            overview["start"] = min(bars[0].datetime, overview["start"])
+            overview["end"] = max(bars[-1].datetime, overview["end"])
+            
+            c: Cursor = self.bar_collection.find(filter)
+            overview["count"] = c.count()
+
+        self.overview_collection.update(filter, overview, upsert=True)
 
     def save_tick_data(self, ticks: List[TickData]) -> bool:
         """保存TICK数据"""
@@ -163,7 +198,7 @@ class MongodbDatabase(BaseDatabase):
         """读取K线数据"""
         filter = {
             "symbol": symbol,
-            "exchange": exchange.values,
+            "exchange": exchange.value,
             "interval": interval.value,
             "datetime": {
                 "$gte": start,
@@ -247,7 +282,18 @@ class MongodbDatabase(BaseDatabase):
 
     def get_bar_overview(self) -> List[BarOverview]:
         """查询数据库中的K线汇总信息"""
-        pass
+        c: Cursor = self.overview_collection.find()
+
+        overviews = []
+        for d in c:
+            d["exchange"] = Exchange(d["exchange"])
+            d["interval"] = Interval(d["interval"])
+            d.pop("_id")
+
+            overview = BarOverview(**d)
+            overviews.append(overview)
+
+        return overviews
 
     def init_bar_overview(self) -> None:
         """初始化数据库中的K线汇总信息"""
