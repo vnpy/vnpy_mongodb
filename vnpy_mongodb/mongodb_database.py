@@ -6,6 +6,7 @@ from pymongo import ASCENDING, MongoClient
 from pymongo.database import Database
 from pymongo.cursor import Cursor
 from pymongo.collection import Collection
+from pymongo.results import DeleteResult
 
 from vnpy.trader.constant import Exchange, Interval
 from vnpy.trader.object import BarData, TickData
@@ -219,7 +220,15 @@ class MongodbDatabase(BaseDatabase):
         interval: Interval
     ) -> int:
         """删除K线数据"""
-        pass
+        filter = {
+            "symbol": symbol,
+            "exchange": exchange.value,
+            "datetime": datetime,
+            "interval": interval.value,
+        }
+
+        result = self.bar_collection.delete_many(filter)
+        return result.deleted_count
 
     def delete_tick_data(
         self,
@@ -227,7 +236,14 @@ class MongodbDatabase(BaseDatabase):
         exchange: Exchange
     ) -> int:
         """删除TICK数据"""
-        pass
+        filter = {
+            "symbol": symbol,
+            "exchange": exchange.value,
+            "datetime": datetime,
+        }
+
+        result = self.tick_collection.delete_many(filter)
+        return result.deleted_count
 
     def get_bar_overview(self) -> List[BarOverview]:
         """查询数据库中的K线汇总信息"""
