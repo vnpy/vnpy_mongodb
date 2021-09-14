@@ -1,10 +1,8 @@
 """"""
 from datetime import datetime
-from sys import intern
-from typing import List, Dict
+from typing import List
 
 from pymongo import ASCENDING, MongoClient
-from pymongo import cursor
 from pymongo.database import Database
 from pymongo.cursor import Cursor
 from pymongo.collection import Collection
@@ -83,8 +81,6 @@ class MongodbDatabase(BaseDatabase):
 
     def save_bar_data(self, bars: List[BarData]) -> bool:
         """保存K线数据"""
-        overviews: Dict[tuple, BarOverview] = {}
-
         for bar in bars:
             # 逐个插入
             filter = {
@@ -114,7 +110,7 @@ class MongodbDatabase(BaseDatabase):
         filter = {
             "symbol": bar.symbol,
             "exchange": bar.exchange.value,
-            "interval": bar.interval.value 
+            "interval": bar.interval.value
         }
 
         overview = self.overview_collection.find_one(filter)
@@ -131,7 +127,7 @@ class MongodbDatabase(BaseDatabase):
         else:
             overview["start"] = min(bars[0].datetime, overview["start"])
             overview["end"] = max(bars[-1].datetime, overview["end"])
-            
+
             c: Cursor = self.bar_collection.find(filter)
             overview["count"] = c.count()
 
@@ -205,7 +201,7 @@ class MongodbDatabase(BaseDatabase):
                 "$lte": end
             }
         }
-        
+
         c: Cursor = self.bar_collection.find(filter)
 
         bars = []
@@ -236,7 +232,7 @@ class MongodbDatabase(BaseDatabase):
                 "$lte": end
             }
         }
-        
+
         c: Cursor = self.tick_collection.find(filter)
 
         ticks = []
@@ -245,7 +241,7 @@ class MongodbDatabase(BaseDatabase):
             d["gateway_name"] = "DB"
             d.pop("_id")
 
-            tick =  TickData(**d)
+            tick = TickData(**d)
             ticks.append(tick)
 
         return ticks
@@ -279,7 +275,7 @@ class MongodbDatabase(BaseDatabase):
             "datetime": datetime,
         }
 
-        result = self.tick_collection.delete_many(filter)
+        result: DeleteResult = self.tick_collection.delete_many(filter)
         return result.deleted_count
 
     def get_bar_overview(self) -> List[BarOverview]:
@@ -296,7 +292,3 @@ class MongodbDatabase(BaseDatabase):
             overviews.append(overview)
 
         return overviews
-
-    def init_bar_overview(self) -> None:
-        """初始化数据库中的K线汇总信息"""
-        pass
