@@ -1,6 +1,5 @@
 """"""
 from datetime import datetime
-from enum import unique
 from typing import List
 
 from pymongo import ASCENDING, MongoClient
@@ -64,6 +63,14 @@ class MongodbDatabase(BaseDatabase):
 
         # 初始化Tick数据表
         self.tick_collection: Collection = self.db["tick_data"]
+        self.tick_collection.create_index(
+            [
+                ("exchange", ASCENDING),
+                ("symbol", ASCENDING),
+                ("datetime", ASCENDING),
+            ],
+            unique=True
+        )
 
         # 初始化K线概览表
         self.overview_collection: Collection = self.db["bar_overview"]
@@ -96,7 +103,53 @@ class MongodbDatabase(BaseDatabase):
 
     def save_tick_data(self, ticks: List[TickData]) -> bool:
         """保存TICK数据"""
-        pass
+        for tick in ticks:
+            filter = {
+                "symbol": tick.symbol,
+                "exchange": tick.exchange.value,
+                "datetime": tick.datetime,
+            }
+
+            d = {
+                "symbol": tick.symbol,
+                "exchange": tick.exchange.value,
+                "datetime": tick.datetime,
+                "name": tick.name,
+                "volume": tick.volume,
+                "turnover": tick.turnover,
+                "open_interest": tick.open_interest,
+                "last_price": tick.last_price,
+                "last_volume": tick.last_volume,
+                "limit_up": tick.limit_up,
+                "limit_down": tick.limit_down,
+                "open_price": tick.open_price,
+                "high_price": tick.high_price,
+                "low_price": tick.low_price,
+                "pre_close": tick.pre_close,
+                "bid_price_1": tick.bid_price_1,
+                "bid_price_2": tick.bid_price_2,
+                "bid_price_3": tick.bid_price_3,
+                "bid_price_4": tick.bid_price_4,
+                "bid_price_5": tick.bid_price_5,
+                "ask_price_1": tick.ask_price_1,
+                "ask_price_2": tick.ask_price_2,
+                "ask_price_3": tick.ask_price_3,
+                "ask_price_4": tick.ask_price_4,
+                "ask_price_5": tick.ask_price_5,
+                "bid_volume_1": tick.bid_volume_1,
+                "bid_volume_2": tick.bid_volume_2,
+                "bid_volume_3": tick.bid_volume_3,
+                "bid_volume_4": tick.bid_volume_4,
+                "bid_volume_5": tick.bid_volume_5,
+                "ask_volume_1": tick.ask_volume_1,
+                "ask_volume_2": tick.ask_volume_2,
+                "ask_volume_3": tick.ask_volume_3,
+                "ask_volume_4": tick.ask_volume_4,
+                "ask_volume_5": tick.ask_volume_5,
+                "localtime": tick.localtime,
+            }
+
+            self.tick_collection.replace_one(filter, d, upsert=True)
 
     def load_bar_data(
         self,
@@ -121,20 +174,11 @@ class MongodbDatabase(BaseDatabase):
 
         bars = []
         for d in c:
-            bar = BarData(
-                symbol=d["symbol"],
-                exchange=Exchange(d["exchange"]),
-                datetime=d["datetime"],
-                interval=Interval(d["interval"]),
-                volume=d["volume"],
-                turnover=d["turnover"],
-                open_interest=d["open_interest"],
-                open_price=d["open_price"],
-                high_price=d["high_price"],
-                low_price=d["low_price"],
-                close_price=d["close_price"],
-                gateway_name="DB"
-            )
+            d["exchange"] = Exchange(d["exchange"])
+            d["interval"] = Interval(d["interval"])
+            d["gateway_name"] = "DB"
+
+            bar = BarData(**d)
             bars.append(bar)
 
         return bars
@@ -147,7 +191,26 @@ class MongodbDatabase(BaseDatabase):
         end: datetime
     ) -> List[TickData]:
         """读取TICK数据"""
-        pass
+        filter = {
+            "symbol": symbol,
+            "exchange": exchange.values,
+            "datetime": {
+                "$gte": start,
+                "$lte": end
+            }
+        }
+        
+        c: Cursor = self.tick_collection.find(filter)
+
+        ticks = []
+        for d in c:
+            d["exhange"] = Exchange(d["exchange"])
+            d["gateway_name"] = "DB"
+
+            tick =  TickData(**d)
+            ticks.append(tick)
+
+        return ticks
 
     def delete_bar_data(
         self,
