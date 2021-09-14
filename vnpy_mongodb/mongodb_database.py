@@ -1,5 +1,6 @@
 """"""
 from datetime import datetime
+from enum import unique
 from typing import List
 
 from pymongo import ASCENDING, MongoClient
@@ -51,12 +52,15 @@ class MongodbDatabase(BaseDatabase):
 
         # 初始化K线数据表
         self.bar_collection: Collection = self.db["bar_data"]
-        self.bar_collection.create_index([
-            ("exchange", ASCENDING),
-            ("symbol", ASCENDING),
-            ("interval", ASCENDING),
-            ("datetime", ASCENDING),
-        ])
+        self.bar_collection.create_index(
+            [
+                ("exchange", ASCENDING),
+                ("symbol", ASCENDING),
+                ("interval", ASCENDING),
+                ("datetime", ASCENDING),
+            ],
+            unique=True
+        )
 
         # 初始化Tick数据表
         self.tick_collection: Collection = self.db["tick_data"]
@@ -66,9 +70,14 @@ class MongodbDatabase(BaseDatabase):
 
     def save_bar_data(self, bars: List[BarData]) -> bool:
         """保存K线数据"""
-        data = []
-
         for bar in bars:
+            filter = {
+                "symbol": bar.symbol,
+                "exchange": bar.exchange.value,
+                "datetime": bar.datetime,
+                "interval": bar.interval.value,
+            }
+
             d = {
                 "symbol": bar.symbol,
                 "exchange": bar.exchange.value,
@@ -82,9 +91,8 @@ class MongodbDatabase(BaseDatabase):
                 "low_price": bar.low_price,
                 "close_price": bar.close_price,
             }
-            data.append(d)
 
-        self.bar_collection.update_many(data)
+            self.bar_collection.replace_one(filter, d, upsert=True)
 
     def save_tick_data(self, ticks: List[TickData]) -> bool:
         """保存TICK数据"""
@@ -125,9 +133,10 @@ class MongodbDatabase(BaseDatabase):
                 high_price=d["high_price"],
                 low_price=d["low_price"],
                 close_price=d["close_price"],
+                gateway_name="DB"
             )
             bars.append(bar)
-        
+
         return bars
 
     def load_tick_data(
