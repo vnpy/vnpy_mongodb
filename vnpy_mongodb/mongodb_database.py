@@ -213,6 +213,7 @@ class MongodbDatabase(BaseDatabase):
             d["exchange"] = Exchange(d["exchange"])
             d["interval"] = Interval(d["interval"])
             d["gateway_name"] = "DB"
+            d.pop("_id")
 
             bar = BarData(**d)
             bars.append(bar)
@@ -242,6 +243,7 @@ class MongodbDatabase(BaseDatabase):
         for d in c:
             d["exhange"] = Exchange(d["exchange"])
             d["gateway_name"] = "DB"
+            d.pop("_id")
 
             tick =  TickData(**d)
             ticks.append(tick)
