@@ -256,11 +256,12 @@ class MongodbDatabase(BaseDatabase):
         filter = {
             "symbol": symbol,
             "exchange": exchange.value,
-            "datetime": datetime,
             "interval": interval.value,
         }
 
         result = self.bar_collection.delete_many(filter)
+        self.overview_collection.delete_one(filter)
+
         return result.deleted_count
 
     def delete_tick_data(
@@ -271,8 +272,7 @@ class MongodbDatabase(BaseDatabase):
         """删除TICK数据"""
         filter = {
             "symbol": symbol,
-            "exchange": exchange.value,
-            "datetime": datetime,
+            "exchange": exchange.value
         }
 
         result: DeleteResult = self.tick_collection.delete_many(filter)
