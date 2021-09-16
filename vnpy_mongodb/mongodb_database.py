@@ -135,6 +135,8 @@ class MongodbDatabase(BaseDatabase):
 
         self.overview_collection.update(filter, overview, upsert=True)
 
+        return True
+
     def save_tick_data(self, ticks: List[TickData]) -> bool:
         """保存TICK数据"""
         for tick in ticks:
@@ -184,6 +186,8 @@ class MongodbDatabase(BaseDatabase):
             }
 
             self.tick_collection.replace_one(filter, d, upsert=True)
+
+        return True
 
     def load_bar_data(
         self,
