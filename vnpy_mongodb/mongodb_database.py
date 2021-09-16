@@ -10,7 +10,7 @@ from pymongo.results import DeleteResult
 
 from vnpy.trader.constant import Exchange, Interval
 from vnpy.trader.object import BarData, TickData
-from vnpy.trader.database import BaseDatabase, BarOverview
+from vnpy.trader.database import BaseDatabase, BarOverview, DB_TZ
 from vnpy.trader.setting import SETTINGS
 
 
@@ -33,13 +33,15 @@ class MongodbDatabase(BaseDatabase):
                 port=self.port,
                 tz_aware=True,
                 username=self.username,
-                password=self.password
+                password=self.password,
+                tzinfo=DB_TZ
             )
         else:
             self.client: MongoClient = MongoClient(
                 host=self.host,
                 port=self.port,
-                tz_aware=True
+                tz_aware=True,
+                tzinfo=DB_TZ
             )
 
         # 初始化数据库
