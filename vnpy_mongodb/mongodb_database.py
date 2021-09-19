@@ -232,7 +232,7 @@ class MongodbDatabase(BaseDatabase):
         """读取TICK数据"""
         filter = {
             "symbol": symbol,
-            "exchange": exchange.values,
+            "exchange": exchange.value,
             "datetime": {
                 "$gte": start,
                 "$lte": end
@@ -243,7 +243,7 @@ class MongodbDatabase(BaseDatabase):
 
         ticks = []
         for d in c:
-            d["exhange"] = Exchange(d["exchange"])
+            d["exchange"] = Exchange(d["exchange"])
             d["gateway_name"] = "DB"
             d.pop("_id")
 
