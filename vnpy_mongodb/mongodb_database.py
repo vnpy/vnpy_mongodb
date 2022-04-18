@@ -203,8 +203,8 @@ class MongodbDatabase(BaseDatabase):
             "exchange": exchange.value,
             "interval": interval.value,
             "datetime": {
-                "$gte": start,
-                "$lte": end
+                "$gte": start.astimezone(DB_TZ),
+                "$lte": end.astimezone(DB_TZ)
             }
         }
 
@@ -234,8 +234,8 @@ class MongodbDatabase(BaseDatabase):
             "symbol": symbol,
             "exchange": exchange.value,
             "datetime": {
-                "$gte": start,
-                "$lte": end
+                "$gte": start.astimezone(DB_TZ),
+                "$lte": end.astimezone(DB_TZ)
             }
         }
 
