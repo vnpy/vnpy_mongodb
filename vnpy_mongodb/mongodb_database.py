@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import List
 
-from pymongo import ASCENDING, MongoClient
+from pymongo import ASCENDING, MongoClient, ReplaceOne
 from pymongo.database import Database
 from pymongo.cursor import Cursor
 from pymongo.collection import Collection
@@ -139,6 +139,7 @@ class MongodbDatabase(BaseDatabase):
 
     def save_tick_data(self, ticks: List[TickData]) -> bool:
         """保存TICK数据"""
+        requests = []
         for tick in ticks:
             filter = {
                 "symbol": tick.symbol,
@@ -184,9 +185,11 @@ class MongodbDatabase(BaseDatabase):
                 "ask_volume_5": tick.ask_volume_5,
                 "localtime": tick.localtime,
             }
-
-            self.tick_collection.replace_one(filter, d, upsert=True)
-
+            
+            requests.append(ReplaceOne(filter, d, upsert=True))
+            
+        self.tick_collection.bulk_write(requests, ordered=False)
+        
         return True
 
     def load_bar_data(
