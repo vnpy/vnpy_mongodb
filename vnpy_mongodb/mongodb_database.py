@@ -137,7 +137,7 @@ class MongodbDatabase(BaseDatabase):
             c: Cursor = self.bar_collection.find(filter)
             overview["count"] = c.count()
 
-        self.overview_collection.update(filter, overview, upsert=True)
+        self.overview_collection.update_one(filter, {"$set": overview}, upsert=True)
 
         return True
 
