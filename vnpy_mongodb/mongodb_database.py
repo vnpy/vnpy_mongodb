@@ -250,7 +250,7 @@ class MongodbDatabase(BaseDatabase):
             d["gateway_name"] = "DB"
             d.pop("_id")
 
-            tick = TickData(**d)
+            tick: TickData = TickData(**d)
             ticks.append(tick)
 
         return ticks
@@ -297,7 +297,7 @@ class MongodbDatabase(BaseDatabase):
             d["interval"] = Interval(d["interval"])
             d.pop("_id")
 
-            overview = BarOverview(**d)
+            overview: BarOverview = BarOverview(**d)
             overviews.append(overview)
 
         return overviews
