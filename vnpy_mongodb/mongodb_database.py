@@ -85,14 +85,14 @@ class MongodbDatabase(BaseDatabase):
         """保存K线数据"""
         for bar in bars:
             # 逐个插入
-            filter = {
+            filter: dict = {
                 "symbol": bar.symbol,
                 "exchange": bar.exchange.value,
                 "datetime": bar.datetime,
                 "interval": bar.interval.value,
             }
 
-            d = {
+            d: dict = {
                 "symbol": bar.symbol,
                 "exchange": bar.exchange.value,
                 "datetime": bar.datetime,
@@ -109,13 +109,13 @@ class MongodbDatabase(BaseDatabase):
             self.bar_collection.replace_one(filter, d, upsert=True)
 
         # 更新汇总
-        filter = {
+        filter: dict = {
             "symbol": bar.symbol,
             "exchange": bar.exchange.value,
             "interval": bar.interval.value
         }
 
-        overview = self.overview_collection.find_one(filter)
+        overview: dict = self.overview_collection.find_one(filter)
 
         if not overview:
             overview = {
@@ -139,15 +139,15 @@ class MongodbDatabase(BaseDatabase):
 
     def save_tick_data(self, ticks: List[TickData]) -> bool:
         """保存TICK数据"""
-        requests = []
+        requests: list = []
         for tick in ticks:
-            filter = {
+            filter: dict = {
                 "symbol": tick.symbol,
                 "exchange": tick.exchange.value,
                 "datetime": tick.datetime,
             }
 
-            d = {
+            d: dict = {
                 "symbol": tick.symbol,
                 "exchange": tick.exchange.value,
                 "datetime": tick.datetime,
@@ -201,7 +201,7 @@ class MongodbDatabase(BaseDatabase):
         end: datetime
     ) -> List[BarData]:
         """读取K线数据"""
-        filter = {
+        filter: dict = {
             "symbol": symbol,
             "exchange": exchange.value,
             "interval": interval.value,
@@ -213,7 +213,7 @@ class MongodbDatabase(BaseDatabase):
 
         c: Cursor = self.bar_collection.find(filter)
 
-        bars = []
+        bars: List[BarData] = []
         for d in c:
             d["exchange"] = Exchange(d["exchange"])
             d["interval"] = Interval(d["interval"])
@@ -233,7 +233,7 @@ class MongodbDatabase(BaseDatabase):
         end: datetime
     ) -> List[TickData]:
         """读取TICK数据"""
-        filter = {
+        filter: dict = {
             "symbol": symbol,
             "exchange": exchange.value,
             "datetime": {
@@ -244,7 +244,7 @@ class MongodbDatabase(BaseDatabase):
 
         c: Cursor = self.tick_collection.find(filter)
 
-        ticks = []
+        ticks: List[TickData] = []
         for d in c:
             d["exchange"] = Exchange(d["exchange"])
             d["gateway_name"] = "DB"
@@ -262,13 +262,13 @@ class MongodbDatabase(BaseDatabase):
         interval: Interval
     ) -> int:
         """删除K线数据"""
-        filter = {
+        filter: dict = {
             "symbol": symbol,
             "exchange": exchange.value,
             "interval": interval.value,
         }
 
-        result = self.bar_collection.delete_many(filter)
+        result: DeleteResult = self.bar_collection.delete_many(filter)
         self.overview_collection.delete_one(filter)
 
         return result.deleted_count
@@ -279,7 +279,7 @@ class MongodbDatabase(BaseDatabase):
         exchange: Exchange
     ) -> int:
         """删除TICK数据"""
-        filter = {
+        filter: dict = {
             "symbol": symbol,
             "exchange": exchange.value
         }
@@ -291,7 +291,7 @@ class MongodbDatabase(BaseDatabase):
         """查询数据库中的K线汇总信息"""
         c: Cursor = self.overview_collection.find()
 
-        overviews = []
+        overviews: List[BarOverview] = []
         for d in c:
             d["exchange"] = Exchange(d["exchange"])
             d["interval"] = Interval(d["interval"])
