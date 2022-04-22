@@ -12,7 +12,7 @@
 
 ## 说明
 
-基于pymongo 3.12.3 开发的MongoDB数据库接口。
+基于pymongo 4.1.1 开发的MongoDB数据库接口。
 
 ## 使用
 

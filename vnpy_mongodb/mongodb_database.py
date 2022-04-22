@@ -83,6 +83,8 @@ class MongodbDatabase(BaseDatabase):
 
     def save_bar_data(self, bars: List[BarData]) -> bool:
         """保存K线数据"""
+        requests: List[ReplaceOne] = []
+
         for bar in bars:
             # 逐个插入
             filter: dict = {
@@ -106,7 +108,9 @@ class MongodbDatabase(BaseDatabase):
                 "close_price": bar.close_price,
             }
 
-            self.bar_collection.replace_one(filter, d, upsert=True)
+            requests.append(ReplaceOne(filter, d, upsert=True))
+
+        self.bar_collection.bulk_write(requests, ordered=False)
 
         # 更新汇总
         filter: dict = {
@@ -133,13 +137,14 @@ class MongodbDatabase(BaseDatabase):
             c: Cursor = self.bar_collection.find(filter)
             overview["count"] = c.count()
 
-        self.overview_collection.update(filter, overview, upsert=True)
+        self.overview_collection.update_one(filter, {"$set": overview}, upsert=True)
 
         return True
 
     def save_tick_data(self, ticks: List[TickData]) -> bool:
         """保存TICK数据"""
-        requests: list = []
+        requests: List[ReplaceOne] = []
+
         for tick in ticks:
             filter: dict = {
                 "symbol": tick.symbol,
