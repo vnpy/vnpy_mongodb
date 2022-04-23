@@ -190,11 +190,11 @@ class MongodbDatabase(BaseDatabase):
                 "ask_volume_5": tick.ask_volume_5,
                 "localtime": tick.localtime,
             }
-            
+
             requests.append(ReplaceOne(filter, d, upsert=True))
-            
+
         self.tick_collection.bulk_write(requests, ordered=False)
-        
+
         return True
 
     def load_bar_data(
