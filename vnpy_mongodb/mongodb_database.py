@@ -133,9 +133,7 @@ class MongodbDatabase(BaseDatabase):
         else:
             overview["start"] = min(bars[0].datetime, overview["start"])
             overview["end"] = max(bars[-1].datetime, overview["end"])
-
-            c: Cursor = self.bar_collection.find(filter)
-            overview["count"] = c.count_documents({})
+            overview["count"] = self.bar_collection.count_documents(filter)
 
         self.overview_collection.update_one(filter, {"$set": overview}, upsert=True)
 
