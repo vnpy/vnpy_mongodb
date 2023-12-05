@@ -228,7 +228,7 @@ class MongodbDatabase(BaseDatabase):
         else:
             overview["start"] = min(ticks[0].datetime, overview["start"])
             overview["end"] = max(ticks[-1].datetime, overview["end"])
-            overview["count"] = self.bar_collection.count_documents(filter)
+            overview["count"] = self.tick_collection.count_documents(filter)
 
         self.tick_overview_collection.update_one(filter, {"$set": overview}, upsert=True)
 
