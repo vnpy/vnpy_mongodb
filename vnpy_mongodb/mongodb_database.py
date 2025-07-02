@@ -19,33 +19,37 @@ class MongodbDatabase(BaseDatabase):
 
     def __init__(self) -> None:
         """"""
-        # 读取配置
-        self.database: str = SETTINGS["database.database"]
-        self.host: str = SETTINGS["database.host"]
-        self.port: int = SETTINGS["database.port"]
-        self.username: str = SETTINGS["database.user"]
-        self.password: str = SETTINGS["database.password"]
-
-        # 创建客户端
-        if self.username and self.password:
-            self.client: MongoClient = MongoClient(
-                host=self.host,
-                port=self.port,
-                tz_aware=True,
-                username=self.username,
-                password=self.password,
-                tzinfo=DB_TZ
-            )
+        database_uri = SETTINGS.get("database.uri", None)
+        if database_uri:
+            self.client: MongoClient = MongoClient(database_uri, tz_aware=True, tzinfo=DB_TZ)
         else:
-            self.client = MongoClient(
-                host=self.host,
-                port=self.port,
-                tz_aware=True,
-                tzinfo=DB_TZ
-            )
+            # 读取配置
+            self.database: str = SETTINGS["database.database"]
+            self.host: str = SETTINGS["database.host"]
+            self.port: int = SETTINGS["database.port"]
+            self.username: str = SETTINGS["database.user"]
+            self.password: str = SETTINGS["database.password"]
+
+            # 创建客户端
+            if self.username and self.password:
+                self.client: MongoClient = MongoClient(
+                    host=self.host,
+                    port=self.port,
+                    tz_aware=True,
+                    username=self.username,
+                    password=self.password,
+                    tzinfo=DB_TZ
+                )
+            else:
+                self.client = MongoClient(
+                    host=self.host,
+                    port=self.port,
+                    tz_aware=True,
+                    tzinfo=DB_TZ
+                )
 
         # 初始化数据库
-        self.db: Database = self.client[self.database]
+        self.db: Database = self.client.get_default_database()
 
         # 初始化K线数据表
         self.bar_collection: Collection = self.db["bar_data"]

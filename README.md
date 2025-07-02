@@ -16,7 +16,9 @@
 
 ## 使用
 
-在VeighNa中使用MongoDB时，需要在全局配置中填写以下字段信息：
+在VeighNa中使用MongoDB时，
+
+方式一: 在全局配置中填写以下字段信息：  
 
 |名称|含义|必填|举例|
 |---------|----|---|---|
@@ -26,3 +28,12 @@
 |database.database|实例|是|vnpy|
 |database.user|用户名|否||
 |database.password|密码|否||
+
+
+方式二: 使用URI方式配置数据库(副本集方式配置需使用MongoDB 4.0以上版本), 需要在全局配置中填写以下字段信息：  
+
+|名称|含义|必填|举例|
+|---------|----|---|---|
+|database.name|名称|是|mongodb|
+|database.uri|地址|是|mongodb://user:pass@host1:27017,host2:27017,host3:27017/vnpy?retryReads=false&retryWrites=false&authSource=vnpy|
+
