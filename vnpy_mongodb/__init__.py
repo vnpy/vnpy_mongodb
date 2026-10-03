@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+"""MongoDB数据库接口。"""
 
 from .mongodb_database import MongodbDatabase as Database
 

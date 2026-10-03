@@ -1,4 +1,4 @@
-""""""
+"""MongoDB的K线与Tick存储实现。"""
 from datetime import datetime
 from typing import Any
 
@@ -18,7 +18,7 @@ class MongodbDatabase(BaseDatabase):
     """MongoDB数据库接口"""
 
     def __init__(self) -> None:
-        """"""
+        """按配置连接MongoDB，并创建K线、Tick及汇总集合的唯一索引。"""
         # 读取配置
         self.database: str = SETTINGS["database.database"]
         self.host: str = SETTINGS["database.host"]
