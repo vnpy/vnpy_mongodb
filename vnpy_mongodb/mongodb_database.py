@@ -95,6 +95,7 @@ class MongodbDatabase(BaseDatabase):
         """保存K线数据"""
         requests: list[ReplaceOne] = []
 
+        bar: BarData
         for bar in bars:
             # 逐个插入
             filter: dict = {
@@ -156,6 +157,7 @@ class MongodbDatabase(BaseDatabase):
         """保存TICK数据"""
         requests: list[ReplaceOne] = []
 
+        tick: TickData
         for tick in ticks:
             filter: dict = {
                 "symbol": tick.symbol,
@@ -256,13 +258,14 @@ class MongodbDatabase(BaseDatabase):
         c: Cursor = self.bar_collection.find(filter)
 
         bars: list[BarData] = []
+        d: dict
         for d in c:
             d["exchange"] = Exchange(d["exchange"])
             d["interval"] = Interval(d["interval"])
             d["gateway_name"] = "DB"
             d.pop("_id")
 
-            bar = BarData(**d)
+            bar: BarData = BarData(**d)
             bars.append(bar)
 
         return bars
@@ -287,6 +290,7 @@ class MongodbDatabase(BaseDatabase):
         c: Cursor = self.tick_collection.find(filter)
 
         ticks: list[TickData] = []
+        d: dict
         for d in c:
             d["exchange"] = Exchange(d["exchange"])
             d["gateway_name"] = "DB"
@@ -336,6 +340,7 @@ class MongodbDatabase(BaseDatabase):
         c: Cursor = self.bar_overview_collection.find()
 
         overviews: list[BarOverview] = []
+        d: dict
         for d in c:
             d["exchange"] = Exchange(d["exchange"])
             d["interval"] = Interval(d["interval"])
@@ -351,6 +356,7 @@ class MongodbDatabase(BaseDatabase):
         c: Cursor = self.tick_overview_collection.find()
 
         overviews: list[TickOverview] = []
+        d: dict
         for d in c:
             d["exchange"] = Exchange(d["exchange"])
             d.pop("_id")
