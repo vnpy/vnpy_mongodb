@@ -1,6 +1,6 @@
 """MongoDB的K线与Tick存储实现。"""
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 from pymongo import ASCENDING, MongoClient, ReplaceOne
 from pymongo.database import Database
@@ -101,14 +101,14 @@ class MongodbDatabase(BaseDatabase):
                 "symbol": bar.symbol,
                 "exchange": bar.exchange.value,
                 "datetime": bar.datetime,
-                "interval": bar.interval.value,
+                "interval": cast(Interval, bar.interval).value,
             }
 
             d: dict = {
                 "symbol": bar.symbol,
                 "exchange": bar.exchange.value,
                 "datetime": bar.datetime,
-                "interval": bar.interval.value,
+                "interval": cast(Interval, bar.interval).value,
                 "volume": bar.volume,
                 "turnover": bar.turnover,
                 "open_interest": bar.open_interest,
@@ -126,7 +126,7 @@ class MongodbDatabase(BaseDatabase):
         filter = {
             "symbol": bar.symbol,
             "exchange": bar.exchange.value,
-            "interval": bar.interval.value
+            "interval": cast(Interval, bar.interval).value
         }
 
         overview: dict | None = self.bar_overview_collection.find_one(filter)
@@ -135,7 +135,7 @@ class MongodbDatabase(BaseDatabase):
             overview = {
                 "symbol": bar.symbol,
                 "exchange": bar.exchange.value,
-                "interval": bar.interval.value,
+                "interval": cast(Interval, bar.interval).value,
                 "count": len(bars),
                 "start": bars[0].datetime,
                 "end": bars[-1].datetime
